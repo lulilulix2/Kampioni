@@ -5,15 +5,45 @@ import { generateClient } from "aws-amplify/data";
 import type { Schema } from "@/amplify/data/resource";
 import "./../app/app.css";
 import { Amplify } from "aws-amplify";
-import outputs from "@/amplify_outputs.json";
 import "@aws-amplify/ui-react/styles.css";
 
-Amplify.configure(outputs);
+// ✅ Hiq import-in e file që shkakton error
+// import outputs from "@/amplify_outputs.json"; 
+
+// ✅ Konfiguro Amplify në mënyrë të sigurt
+try {
+  // Amplify.configure(outputs);
+  Amplify.configure({
+    // Vendos konfigurimin manual këtu
+    API: {
+      GraphQL: {
+        endpoint: process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT,
+        region: process.env.NEXT_PUBLIC_REGION
+      }
+    }
+  });
+} catch (error) {
+  console.warn("Amplify configuration failed:", error);
+}
 
 const client = generateClient<Schema>();
 
-// PRODUKTET E PATIKAVE DHE KËPUCËVE
-const products = [
+// ✅ Definimi i type-ve
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  description: string;
+}
+
+interface Order {
+  id: string;
+  content: string;
+}
+
+// ✅ PRODUKTET
+const products: Product[] = [
   {
     id: 1,
     name: "Patike te punes navy",
@@ -25,23 +55,24 @@ const products = [
     id: 2,
     name: "patike per futboll", 
     price: 35,
-    image: "/images/20180413_151040.jpg",
+    image: "/images/20180413_151040.jpg", 
     description: "patike 120"
   }
 ];
 
 export default function App() {
-  const [cart, setCart] = useState([]);
-  const [orders, setOrders] = useState([]);
+  // ✅ Shto type definitions
+  const [cart, setCart] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
-  // Shto në shportë
-  function addToCart(product) {
+  // ✅ Shto në shportë me type
+  function addToCart(product: Product) {
     setCart([...cart, product]);
     alert(`${product.name} u shtua në shportë!`);
   }
 
-  // Bëj porosi
-  function createOrder() {
+  // ✅ Bëj porosi me error handling
+  async function createOrder() {
     if (cart.length === 0) {
       alert("Shporta juaj është e zbrazët!");
       return;
@@ -50,13 +81,29 @@ export default function App() {
     const orderDetails = cart.map(item => item.name).join(", ");
     const total = cart.reduce((sum, item) => sum + item.price, 0);
     
-    client.models.Todo.create({
-      content: `POROSI: ${orderDetails} - TOTAL: ${total}€`
-    });
-    
-    alert(`Porosia u krye! Totali: ${total}€`);
-    setCart([]);
+    try {
+      // ✅ Përdor try-catch për shmangie të erroreve
+      await client.models.Todo.create({
+        content: `POROSI: ${orderDetails} - TOTAL: ${total}€`
+      });
+      
+      alert(`Porosia u krye! Totali: ${total}€`);
+      setCart([]);
+    } catch (error) {
+      console.error("Gabim në porosi:", error);
+      alert("Gabim në krijimin e porosisë!");
+    }
   }
+
+  // ✅ Shiko porositë me error handling
+  useEffect(() => {
+    const subscription = client.models.Todo.observeQuery().subscribe({
+      next: (data) => setOrders(data.items as Order[]),
+      error: (error) => console.error("Gabim në subscription:", error)
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <main>
@@ -106,15 +153,9 @@ export default function App() {
         </div>
       </div>
 
-      {/* MENAXHIMI I POROSIVE (Për ty) */}
+      {/* MENAXHIMI I POROSIVE */}
       <div className="admin-section">
         <h2>📊 Menaxhimi i Porosive</h2>
-        <button onClick={() => client.models.Todo.observeQuery().subscribe({
-          next: (data) => setOrders([...data.items]),
-        })}>
-          Shiko Porositë
-        </button>
-        
         <ul>
           {orders.map((order) => (
             <li key={order.id}>📦 {order.content}</li>
