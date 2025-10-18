@@ -1,10 +1,21 @@
-app/
-├── page.tsx                    # Home page
-├── kepuca/
-│   ├── page.tsx               # Këpucë - kategori kryesore
-│   ├── kepuca-sportive/
-│   │   └── page.tsx           # Këpucë Sportive
-│   ├── patika/
-│   │   └── page.tsx           # Patika
-│   └── sandale/
-│       └── page.tsx           # Sandale
+/* Fshi çdo gjë dhe shto vetëm këtë */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.product-card {
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.cart {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
