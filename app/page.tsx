@@ -1,22 +1,51 @@
+"use client";
+
 import { useState } from "react";
-import "./../app/app.css";
+import Image from "next/image";
+
+// Definimi i type-ve
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  description: string;
+}
+
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+}
 
 // PRODUKTET
-const products = [
+const products: Product[] = [
   {
     id: 1,
     name: "Patike te punes navy",
     price: 45,
     image: "/images/20180413_150958.jpg",
     description: "patike 949"
+  },
+  {
+    id: 2,
+    name: "patike per futboll",
+    price: 35,
+    image: "/images/20180413_151040.jpg",
+    description: "patike 120"
   }
 ];
 
 export default function App() {
-  const [cart, setCart] = useState<any[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
 
-  function addToCart(product: any) {
-    setCart([...cart, product]);
+  function addToCart(product: Product) {
+    const cartItem: CartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price
+    };
+    setCart([...cart, cartItem]);
     alert(`${product.name} u shtua në shportë!`);
   }
 
@@ -24,7 +53,7 @@ export default function App() {
     <main>
       <h1>🏪 Dyqani Im i Patikave</h1>
       
-      <div className="cart">
+      <div>
         <h2>🛒 Shporta ({cart.length})</h2>
         {cart.length > 0 ? (
           <ul>
@@ -37,23 +66,22 @@ export default function App() {
         )}
       </div>
 
-      <div className="products-grid">
+      <div>
         <h2>👟 Këpucët Tona</h2>
-        <div className="products">
+        <div>
           {products.map((product) => (
-            <div key={product.id} className="product-card">
-              <img 
+            <div key={product.id}>
+              {/* Zëvendësoi img me Image nga Next.js */}
+              <Image 
                 src={product.image} 
                 alt={product.name}
-                className="product-image"
+                width={200}
+                height={200}
               />
               <h3>{product.name}</h3>
-              <p className="description">{product.description}</p>
-              <p className="price">{product.price}€</p>
-              <button 
-                onClick={() => addToCart(product)}
-                className="add-to-cart-btn"
-              >
+              <p>{product.description}</p>
+              <p>{product.price}€</p>
+              <button onClick={() => addToCart(product)}>
                 🛒 Shto në Shportë
               </button>
             </div>
