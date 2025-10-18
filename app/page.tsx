@@ -1,127 +1,95 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
-import { Amplify } from "aws-amplify";
+import Link from "next/link";
 import { Authenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 
-// ✅ KONFIGURIMI I PLOTË I COGNITO
-Amplify.configure({
-  Auth: {
-    region: 'us-east-2', // ✅ Region-i yt
-    userPoolId: 'us-east-2_1cO6qPS04', // ✅ User Pool ID
-    userPoolWebClientId: '2m40rt16o2r9jhuj4sg66cns0i' // ✅ App Client ID
-  }
-});
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  description: string;
-}
-
-interface CartItem {
-  id: number;
-  name: string;
-  price: number;
-}
-
-const products: Product[] = [
-  {
-    id: 1,
-    name: "Patike te punes navy",
-    price: 45,
-    image: "https://via.placeholder.com/200x200/3498db/ffffff?text=Patike+1",
-    description: "patike 949"
-  },
-  {
-    id: 2,
-    name: "patike per futboll",
-    price: 35, 
-    image: "https://via.placeholder.com/200x200/e74c3c/ffffff?text=Patike+2",
-    description: "patike 120"
-  }
-];
-
-function MyApp() {
-  const [cart, setCart] = useState<CartItem[]>([]);
-
-  function addToCart(product: Product) {
-    const cartItem: CartItem = {
-      id: product.id,
-      name: product.name,
-      price: product.price
-    };
-    setCart([...cart, cartItem]);
-    alert(`${product.name} u shtua në shportë!`);
-  }
-
+function HomePage() {
   return (
-    <main>
-      <h1>🏪 Dyqani Im i Patikave</h1>
+    <main style={{padding: '20px', maxWidth: '1200px', margin: '0 auto'}}>
+      <h1>🏪 Dyqani Im i Këpucëve</h1>
       
-      <div>
-        <h2>🛒 Shporta ({cart.length})</h2>
-        {cart.length > 0 ? (
-          <ul>
-            {cart.map((item, index) => (
-              <li key={index}>{item.name} - {item.price}€</li>
-            ))}
-          </ul>
-        ) : (
-          <p>Shporta është e zbrazët</p>
-        )}
-      </div>
+      {/* ✅ Kategoritë kryesore */}
+      <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginTop: '30px'}}>
+        
+        {/* Këpucë */}
+        <Link href="/kepuca" style={{textDecoration: 'none'}}>
+          <div style={{
+            border: '2px solid #3498db', 
+            padding: '30px', 
+            borderRadius: '15px', 
+            textAlign: 'center',
+            background: '#f8f9fa',
+            transition: 'all 0.3s ease',
+            cursor: 'pointer'
+          }} onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-5px)';
+            e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.1)';
+          }} onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}>
+            <div style={{fontSize: '3em', marginBottom: '15px'}}>👟</div>
+            <h2 style={{color: '#2c3e50', margin: '0'}}>Këpucë</h2>
+            <p style={{color: '#7f8c8d', margin: '10px 0 0 0'}}>Shiko të gjitha llojet e këpucëve</p>
+          </div>
+        </Link>
 
-      <div>
-        <h2>👟 Këpucët Tona</h2>
-        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px'}}>
-          {products.map((product) => (
-            <div key={product.id} style={{border: '1px solid #ddd', padding: '15px', borderRadius: '10px', textAlign: 'center'}}>
-              <Image 
-                src={product.image} 
-                alt={product.name}
-                width={200}
-                height={200}
-                style={{borderRadius: '5px'}}
-              />
-              <h3>{product.name}</h3>
-              <p>{product.description}</p>
-              <p style={{fontSize: '1.2em', fontWeight: 'bold', color: '#2ecc71'}}>{product.price}€</p>
-              <button 
-                onClick={() => addToCart(product)}
-                style={{background: '#3498db', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '5px'}}
-              >
-                🛒 Shto në Shportë
-              </button>
-            </div>
-          ))}
+        {/* Opsionale: Kategori të tjera */}
+        <div style={{
+          border: '2px solid #95a5a6', 
+          padding: '30px', 
+          borderRadius: '15px', 
+          textAlign: 'center',
+          background: '#f8f9fa',
+          opacity: 0.7
+        }}>
+          <div style={{fontSize: '3em', marginBottom: '15px'}}>👕</div>
+          <h2 style={{color: '#2c3e50', margin: '0'}}>Veshje</h2>
+          <p style={{color: '#7f8c8d', margin: '10px 0 0 0'}}>Së shpejti...</p>
         </div>
+
+        <div style={{
+          border: '2px solid #95a5a6', 
+          padding: '30px', 
+          borderRadius: '15px', 
+          textAlign: 'center',
+          background: '#f8f9fa',
+          opacity: 0.7
+        }}>
+          <div style={{fontSize: '3em', marginBottom: '15px'}}>🎒</div>
+          <h2 style={{color: '#2c3e50', margin: '0'}}>Aksesorë</h2>
+          <p style={{color: '#7f8c8d', margin: '10px 0 0 0'}}>Së shpejti...</p>
+        </div>
+
       </div>
     </main>
   );
 }
 
-// ✅ AUTHENTICATOR për login të vërtetë me Cognito
-export default function App() {
+export default function Home() {
   return (
     <Authenticator>
       {({ signOut, user }) => (
         <div>
-          <div style={{background: '#2ecc71', color: 'white', padding: '15px', marginBottom: '20px', borderRadius: '10px'}}>
-            <h3>🔐 Mirësevini në Dyqanin Tonë!</h3>
-            <p>✅ Ju jeni loguar si: <strong>{user?.username}</strong></p>
-            <button 
-              onClick={signOut}
-              style={{background: '#e74c3c', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '5px', marginTop: '10px'}}
-            >
-              Shkyçu
-            </button>
+          <div style={{background: '#2ecc71', color: 'white', padding: '15px', marginBottom: '20px'}}>
+            <div style={{maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+              <div>
+                <h3 style={{margin: '0'}}>🔐 Mirësevini!</h3>
+                <p style={{margin: '5px 0 0 0'}}>Ju jeni loguar si: <strong>{user?.username}</strong></p>
+              </div>
+              <div>
+                <button 
+                  onClick={signOut}
+                  style={{background: '#e74c3c', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '5px'}}
+                >
+                  Shkyçu
+                </button>
+              </div>
+            </div>
           </div>
-          <MyApp />
+          <HomePage />
         </div>
       )}
     </Authenticator>
