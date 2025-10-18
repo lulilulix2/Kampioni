@@ -2,6 +2,18 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { Amplify } from "aws-amplify";
+import { Authenticator } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
+
+// ✅ KONFIGURIMI I PLOTË I COGNITO
+Amplify.configure({
+  Auth: {
+    region: 'us-east-2', // ✅ Region-i yt
+    userPoolId: 'us-east-2_1cO6qPS04', // ✅ User Pool ID
+    userPoolWebClientId: '2m40rt16o2r9jhuj4sg66cns0i' // ✅ App Client ID
+  }
+});
 
 interface Product {
   id: number;
@@ -17,7 +29,6 @@ interface CartItem {
   price: number;
 }
 
-// ✅ Përdor URL të fotove nga interneti
 const products: Product[] = [
   {
     id: 1,
@@ -35,9 +46,8 @@ const products: Product[] = [
   }
 ];
 
-export default function App() {
+function MyApp() {
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   function addToCart(product: Product) {
     const cartItem: CartItem = {
@@ -49,28 +59,8 @@ export default function App() {
     alert(`${product.name} u shtua në shportë!`);
   }
 
-  function handleLogin() {
-    setIsLoggedIn(true);
-    alert('Ju jeni loguar me sukses!');
-  }
-
   return (
     <main>
-      {/* ✅ Shto Login Section */}
-      <div style={{background: '#f0f0f0', padding: '15px', marginBottom: '20px', borderRadius: '10px'}}>
-        <h3>🔐 Hyrje në Llogari</h3>
-        {isLoggedIn ? (
-          <p>✅ Ju jeni loguar! Mirësevini!</p>
-        ) : (
-          <button 
-            onClick={handleLogin}
-            style={{background: '#2ecc71', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '5px'}}
-          >
-            Hyr në Llogari
-          </button>
-        )}
-      </div>
-
       <h1>🏪 Dyqani Im i Patikave</h1>
       
       <div>
@@ -112,5 +102,28 @@ export default function App() {
         </div>
       </div>
     </main>
+  );
+}
+
+// ✅ AUTHENTICATOR për login të vërtetë me Cognito
+export default function App() {
+  return (
+    <Authenticator>
+      {({ signOut, user }) => (
+        <div>
+          <div style={{background: '#2ecc71', color: 'white', padding: '15px', marginBottom: '20px', borderRadius: '10px'}}>
+            <h3>🔐 Mirësevini në Dyqanin Tonë!</h3>
+            <p>✅ Ju jeni loguar si: <strong>{user?.username}</strong></p>
+            <button 
+              onClick={signOut}
+              style={{background: '#e74c3c', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '5px', marginTop: '10px'}}
+            >
+              Shkyçu
+            </button>
+          </div>
+          <MyApp />
+        </div>
+      )}
+    </Authenticator>
   );
 }
