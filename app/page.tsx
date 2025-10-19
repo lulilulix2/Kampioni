@@ -1,149 +1,116 @@
 "use client";
+import { useState, useEffect } from "react";
+import { auth, db } from "../firebaseConfig";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { collection, addDoc, getDocs } from "firebase/firestore";
+import Image from "next/image";
+import "./app.css";
 
-import { useState } from "react";
-import { Amplify } from "aws-amplify";
-import { Authenticator } from '@aws-amplify/ui-react';
-import '@aws-amplify/ui-react/styles.css';
+interface Produkt {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+}
 
-// ✅ KONFIGURIMI I COGNITO
-Amplify.configure({
-  Auth: {
-    region: 'us-east-2',
-    userPoolId: 'us-east-2_1cO6qPS04', 
-    userPoolWebClientId: '2m40rt16o2r9jhuj4sg66cns0i'
-  }
-});
-
-// ✅ TË DHËNAT
-const products = [
-  { id: 1, name: "Patika Navy", price: 45, image: "https://via.placeholder.com/200" },
-  { id: 2, name: "Patika Futboll", price: 35, image: "https://via.placeholder.com/200" }
+const products: Produkt[] = [
+  { id: 1, name: "Patike Futboll", price: 35, image: "/images/futboll.jpg" },
+  { id: 2, name: "Patike Work", price: 45, image: "/images/work.jpg" },
 ];
 
-const orders = [
-  { id: 1, user: "banana_sh", products: "Patika Navy x2", total: 90 }
-];
+export default function HomePage() {
+  // Login/Register state
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isRegister, setIsRegister] = useState(false);
 
-// ✅ KOMPONENTI KRYESOR
-function AppContent({ user, signOut }: { user: any; signOut: any }) {
-  const [cart, setCart] = useState<any[]>([]);
-  const [isAdmin] = useState(user.username === "admin");
+  // User & Orders
+  const [user, setUser] = useState<any>(null);
+  const [selected, setSelected] = useState<number[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
 
-  const addToCart = (product: any) => {
-    setCart([...cart, product]);
-    alert(`${product.name} u shtua në shportë!`);
+  // Firebase login/register
+  const handleAuth = async () => {
+    try {
+      if (isRegister) {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
+      setUser(auth.currentUser);
+      alert("Success!");
+    } catch (error: any) {
+      alert(error.message);
+    }
   };
 
-  const createOrder = () => {
-    if (cart.length === 0) return alert("Shporta është e zbrazët!");
-    const total = cart.reduce((sum, item) => sum + item.price, 0);
-    alert(`Porosia u krye! Totali: ${total}€`);
-    setCart([]);
+  // Place order
+  const handleOrder = async () => {
+    if (!user) return alert("Login first");
+    await addDoc(collection(db, "orders"), {
+      userId: user.uid,
+      products: selected,
+      createdAt: new Date(),
+    });
+    alert("Order placed!");
+    setSelected([]);
   };
 
-  const userOrders = orders.filter(order => order.user === user.username);
+  // Fetch orders (for admin)
+  const fetchOrders = async () => {
+    const snapshot = await getDocs(collection(db, "orders"));
+    setOrders(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+  };
 
-  // ✅ ADMIN VIEW
-  if (isAdmin) {
-    return (
-      <div style={{ padding: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h1>👑 Admin Panel</h1>
-          <button onClick={signOut} style={{ background: '#e74c3c', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '5px' }}>
-            Shkyçu
+  useEffect(() => {
+    // Auto fetch orders if admin
+    if (user?.email === "admin@example.com") fetchOrders();
+  }, [user]);
+
+  return (
+    <div className="container">
+      {!user ? (
+        <div className="login-box">
+          <h2>{isRegister ? "Register" : "Login"}</h2>
+          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <button onClick={handleAuth}>{isRegister ? "Register" : "Login"}</button>
+          <button onClick={() => setIsRegister(!isRegister)}>
+            {isRegister ? "Have an account? Login" : "No account? Register"}
           </button>
         </div>
-        
-        <h2>📦 Të Gjitha Porositë</h2>
-        <div style={{ background: 'white', padding: '15px', borderRadius: '8px' }}>
-          {orders.map(order => (
-            <div key={order.id} style={{ padding: '10px', borderBottom: '1px solid #eee' }}>
-              <strong>#{order.id}</strong> - {order.user}: {order.products} - {order.total}€
+      ) : (
+        <div>
+          <h1>Welcome {user.email}</h1>
+
+          <h2>Products</h2>
+          {products.map((p) => (
+            <div key={p.id} className="product">
+              <h3>{p.name}</h3>
+              <p>{p.price} €</p>
+              <Image src={p.image} width={200} height={200} alt={p.name} />
+              <button onClick={() => setSelected([...selected, p.id])}>Add to Order</button>
             </div>
           ))}
-        </div>
-      </div>
-    );
-  }
 
-  // ✅ CLIENT VIEW
-  return (
-    <div style={{ padding: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1>🏪 Dyqani Im i Këpucëve</h1>
-        <button onClick={signOut} style={{ background: '#e74c3c', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '5px' }}>
-          Shkyçu
-        </button>
-      </div>
+          <button onClick={handleOrder} disabled={selected.length === 0}>
+            Place Order ({selected.length})
+          </button>
 
-      <div style={{ display: 'flex', gap: '20px' }}>
-        {/* PRODUKTET */}
-        <div style={{ flex: 2 }}>
-          <h2>Produktet</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-            {products.map(product => (
-              <div key={product.id} style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
-                <img src={product.image} alt={product.name} width="150" height="150" />
-                <h3>{product.name}</h3>
-                <p style={{ fontWeight: 'bold', color: '#27ae60' }}>{product.price}€</p>
-                <button 
-                  onClick={() => addToCart(product)}
-                  style={{ background: '#3498db', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '5px', width: '100%' }}
-                >
-                  🛒 Shto në Shportë
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* SHPORTA */}
-        <div style={{ flex: 1 }}>
-          <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px' }}>
-            <h2>🛒 Shporta ({cart.length})</h2>
-            {cart.length > 0 ? (
-              <div>
-                {cart.map((item, index) => (
-                  <div key={index} style={{ marginBottom: '5px' }}>
-                    {item.name} - {item.price}€
-                  </div>
-                ))}
-                <button 
-                  onClick={createOrder}
-                  style={{ background: '#27ae60', color: 'white', border: 'none', padding: '10px', borderRadius: '5px', width: '100%', marginTop: '10px' }}
-                >
-                  ✅ Bëj Porosinë
-                </button>
-              </div>
-            ) : (
-              <p>Shporta është e zbrazët</p>
-            )}
-          </div>
-
-          {/* POROSIT E KLIENTIT */}
-          {userOrders.length > 0 && (
-            <div style={{ background: '#e8f6f3', padding: '15px', borderRadius: '8px', marginTop: '15px' }}>
-              <h3>📦 Porositë e Mia</h3>
-              {userOrders.map(order => (
-                <div key={order.id} style={{ marginBottom: '5px' }}>
-                  #{order.id}: {order.products} - {order.total}€
+          {user.email === "admin@example.com" && (
+            <div className="admin-panel">
+              <h2>All Orders</h2>
+              {orders.map((o) => (
+                <div key={o.id}>
+                  <p>User ID: {o.userId}</p>
+                  <p>Products: {o.products.join(", ")}</p>
+                  <p>Date: {o.createdAt.toDate().toString()}</p>
                 </div>
               ))}
             </div>
           )}
         </div>
-      </div>
-    </div>
-  );
-}
-
-// ✅ EKSPORTI KRYESOR
-export default function Home() {
-  return (
-    <Authenticator>
-      {({ signOut, user }) => (
-        <AppContent user={user} signOut={signOut} />
       )}
-    </Authenticator>
+    </div>
   );
 }
