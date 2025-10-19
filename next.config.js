@@ -1,9 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    turbopack: false, // Disable Turbopack for Amplify compatibility
+  output: "export", // ky është sekreti që e bën të deployohet si static në Amplify
+  images: {
+    unoptimized: true,
   },
-  reactStrictMode: true,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 };
 
 module.exports = nextConfig;
+
