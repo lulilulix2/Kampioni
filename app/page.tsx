@@ -1,7 +1,11 @@
-"use client";
+"use client"; // ✅ Client Component
+
 import { useState, useEffect } from "react";
 import { auth, db } from "../firebaseConfig";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+} from "firebase/auth";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 import Image from "next/image";
 import "./app.css";
@@ -13,13 +17,14 @@ interface Produkt {
   image: string;
 }
 
+// Shembull produktesh
 const products: Produkt[] = [
   { id: 1, name: "Patike Futboll", price: 35, image: "/images/futboll.jpg" },
   { id: 2, name: "Patike Work", price: 45, image: "/images/work.jpg" },
 ];
 
 export default function HomePage() {
-  // Login/Register state
+  // Login/Register
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isRegister, setIsRegister] = useState(false);
@@ -29,7 +34,7 @@ export default function HomePage() {
   const [selected, setSelected] = useState<number[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
 
-  // Firebase login/register
+  // Login/Register function
   const handleAuth = async () => {
     try {
       if (isRegister) {
@@ -47,16 +52,18 @@ export default function HomePage() {
   // Place order
   const handleOrder = async () => {
     if (!user) return alert("Login first");
+
     await addDoc(collection(db, "orders"), {
       userId: user.uid,
       products: selected,
       createdAt: new Date(),
     });
+
     alert("Order placed!");
     setSelected([]);
   };
 
-  // Fetch orders (for admin)
+  // Fetch orders for admin
   const fetchOrders = async () => {
     const snapshot = await getDocs(collection(db, "orders"));
     setOrders(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
@@ -72,9 +79,21 @@ export default function HomePage() {
       {!user ? (
         <div className="login-box">
           <h2>{isRegister ? "Register" : "Login"}</h2>
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <button onClick={handleAuth}>{isRegister ? "Register" : "Login"}</button>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button onClick={handleAuth}>
+            {isRegister ? "Register" : "Login"}
+          </button>
           <button onClick={() => setIsRegister(!isRegister)}>
             {isRegister ? "Have an account? Login" : "No account? Register"}
           </button>
@@ -89,7 +108,9 @@ export default function HomePage() {
               <h3>{p.name}</h3>
               <p>{p.price} €</p>
               <Image src={p.image} width={200} height={200} alt={p.name} />
-              <button onClick={() => setSelected([...selected, p.id])}>Add to Order</button>
+              <button onClick={() => setSelected([...selected, p.id])}>
+                Add to Order
+              </button>
             </div>
           ))}
 
